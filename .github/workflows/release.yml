@@ -16,6 +16,13 @@ jobs:
     runs-on: macos-14
     permissions:
       contents: write
+    env:
+      MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+      MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+      MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
 
     steps:
       - name: Checkout repository
@@ -38,9 +45,6 @@ jobs:
 
       - name: Setup Apple Developer ID Certificate
         if: env.MACOS_CERTIFICATE_BASE64 != ''
-        env:
-          MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
-          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain
           KEYCHAIN_PWD="temporary_build_pwd"
@@ -56,8 +60,6 @@ jobs:
 
       - name: Code Sign Application
         if: env.MACOS_SIGNING_IDENTITY != ''
-        env:
-          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
         run: |
           APP_PATH="build/WireproxyBar.app"
           echo "==> Code signing with identity: $MACOS_SIGNING_IDENTITY"
@@ -71,12 +73,14 @@ jobs:
           ditto -c -k --keepParent build/WireproxyBar.app dist/WireproxyBar.zip
           hdiutil create -volname "WireproxyBar" -srcfolder build/WireproxyBar.app -ov -format UDZO dist/WireproxyBar.dmg
 
+      - name: Code Sign DMG
+        if: env.MACOS_SIGNING_IDENTITY != ''
+        run: |
+          echo "==> Signing DMG..."
+          codesign --force --timestamp --sign "$MACOS_SIGNING_IDENTITY" dist/WireproxyBar.dmg
+
       - name: Apple Notarization
-        if: (github.event.inputs.notarize == 'true' || startsWith(github.ref, 'refs/tags/')) && env.APPLE_ID != ''
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        if: (github.event.inputs.notarize == 'true' || startsWith(github.ref, 'refs/tags/')) && env.APPLE_ID != '' && env.APPLE_APP_SPECIFIC_PASSWORD != ''
         run: |
           echo "==> Submitting DMG for Apple Notarization..."
           xcrun notarytool submit dist/WireproxyBar.dmg \
@@ -87,6 +91,8 @@ jobs:
 
           echo "==> Stapling notarization ticket to DMG..."
           xcrun stapler staple dist/WireproxyBar.dmg
+          xcrun stapler validate dist/WireproxyBar.dmg
+          echo "==> Notarization & Stapling verified successfully!"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
