@@ -1,0 +1,22 @@
+# Build outputs
+WireproxyBar
+*.app/
+build/
+dist/
+wireproxy
+*.dmg
+*.zip
+
+# Temporary & Cache
+.DS_Store
+*.swp
+*~
+.clang-cache/
+Resources/AppIcon.iconset/
+Resources/AppIcon_source.png
+
+# Xcode & Swift
+.build/
+Packages/
+*.xcodeproj/
+xcuserdata/
