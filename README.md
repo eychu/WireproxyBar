@@ -17,10 +17,15 @@
 
 ## Установка
 
-### Вариант 1: Загрузка готового релиза
+### Вариант 1: Через Homebrew Cask (рекомендуется)
+```bash
+brew install --cask eychu/tap/wireproxybar
+```
+
+### Вариант 2: Загрузка готового DMG релиза
 Скачайте актуальный `.dmg` из раздела [Releases](https://github.com/eychu/WireproxyBar/releases) и перетащите `WireproxyBar` в папку `Applications`.
 
-### Вариант 2: Сборка из исходников
+### Вариант 3: Сборка из исходников
 ```bash
 git clone https://github.com/eychu/WireproxyBar.git
 cd WireproxyBar
