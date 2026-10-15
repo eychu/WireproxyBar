@@ -34,7 +34,7 @@ jobs:
           LATEST_TAG=$(curl -sSL "https://api.github.com/repos/windtf/wireproxy/releases/latest" | grep -m1 '"tag_name":' | cut -d '"' -f 4)
           echo "Latest wireproxy version: ${LATEST_TAG:-v1.1.3}"
           
-          curl -sSL "https://github.com/windtf/wireproxy/releases/download/${LATEST_TAG:-v1.1.3}/wireproxy_darwin_arm64.tar.gz" -o wireproxy.tar.gz
+          curl -sSL "https://github.com/windtf/wireproxy/releases/download/${LATEST_TAG:-v1.1.3}/wireproxy_darwin_all.tar.gz" -o wireproxy.tar.gz
           tar -xzf wireproxy.tar.gz
           chmod +x wireproxy
           rm wireproxy.tar.gz
