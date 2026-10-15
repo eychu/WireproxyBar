@@ -70,8 +70,34 @@ jobs:
       - name: Package DMG & ZIP
         run: |
           mkdir -p dist
+          echo "==> Creating ZIP archive..."
           ditto -c -k --keepParent build/WireproxyBar.app dist/WireproxyBar.zip
-          hdiutil create -volname "WireproxyBar" -srcfolder build/WireproxyBar.app -ov -format UDZO dist/WireproxyBar.dmg
+
+          echo "==> Installing create-dmg..."
+          brew install create-dmg || true
+
+          echo "==> Building stylized DMG..."
+          if command -v create-dmg >/dev/null 2>&1; then
+            create-dmg \
+              --volname "WireproxyBar" \
+              --volicon "Resources/AppIcon.icns" \
+              --background "Resources/dmg-background.png" \
+              --window-pos 200 120 \
+              --window-size 600 400 \
+              --icon-size 100 \
+              --icon "WireproxyBar.app" 160 205 \
+              --hide-extension "WireproxyBar.app" \
+              --app-drop-link 440 205 \
+              --no-internet-enable \
+              dist/WireproxyBar.dmg \
+              build/WireproxyBar.app || {
+                echo "create-dmg failed, falling back to hdiutil..."
+                rm -f dist/WireproxyBar.dmg
+                hdiutil create -volname "WireproxyBar" -srcfolder build/WireproxyBar.app -ov -format UDZO dist/WireproxyBar.dmg
+              }
+          else
+            hdiutil create -volname "WireproxyBar" -srcfolder build/WireproxyBar.app -ov -format UDZO dist/WireproxyBar.dmg
+          fi
 
       - name: Code Sign DMG
         if: env.MACOS_SIGNING_IDENTITY != ''
